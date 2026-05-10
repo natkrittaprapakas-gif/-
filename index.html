@@ -16,10 +16,45 @@ body{
   justify-content:center;
   align-items:center;
   min-height:100vh;
-  color:#444;
 }
 
+/* login */
+.login{
+  background:white;
+  padding:40px;
+  border-radius:30px;
+  text-align:center;
+  width:320px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.1);
+}
+
+.login h1{
+  color:#a855f7;
+}
+
+.login input{
+  width:90%;
+  padding:14px;
+  border-radius:14px;
+  border:2px solid #ddd;
+  margin-top:15px;
+  font-size:16px;
+}
+
+.login button{
+  margin-top:20px;
+  padding:14px 20px;
+  border:none;
+  border-radius:16px;
+  background:#a855f7;
+  color:white;
+  font-size:16px;
+  cursor:pointer;
+}
+
+/* classroom */
 .classroom{
+  display:none;
   width:1000px;
   background:#fff7fb;
   border-radius:35px;
@@ -29,38 +64,32 @@ body{
   border:5px solid #ffd6e7;
 }
 
-/* กระดาน */
 .board{
   width:420px;
   margin:auto;
-  background:#ffffff;
+  background:white;
   color:#ff5c8a;
   text-align:center;
   padding:18px;
   border-radius:25px;
   font-size:28px;
   font-weight:bold;
-  border:4px solid #ffc2d6;
 }
 
-/* โต๊ะครู */
 .teacher{
   position:absolute;
   top:30px;
   left:30px;
   background:#ffd166;
-  color:#6b4f00;
   padding:14px 18px;
   border-radius:18px;
   font-weight:bold;
 }
 
-/* ประตู */
 .door{
   position:absolute;
   right:20px;
   background:#bde0fe;
-  color:#2563eb;
   padding:12px 16px;
   border-radius:18px;
   font-weight:bold;
@@ -74,7 +103,6 @@ body{
   bottom:70px;
 }
 
-/* ที่นั่ง */
 .seats{
   margin-top:70px;
 
@@ -91,7 +119,6 @@ body{
   justify-content:center;
 }
 
-/* โต๊ะว่าง */
 .seat{
   width:90px;
   height:90px;
@@ -102,28 +129,19 @@ body{
   font-size:14px;
   font-weight:bold;
   cursor:pointer;
-  transition:0.2s;
-  box-shadow:0 5px 15px rgba(0,0,0,0.1);
 }
 
-.seat:hover{
-  transform:scale(1.08);
-}
-
-/* โต๊ะที่จองแล้ว */
 .booked{
   background:#a855f7;
   color:white;
   border:4px solid #7e22ce;
 }
 
-/* ทางเดิน */
 .walkway{
   width:60px;
   height:90px;
 }
 
-/* ช่องว่าง */
 .empty{
   width:90px;
   height:90px;
@@ -137,7 +155,6 @@ body{
   color:#ff5c8a;
 }
 
-/* popup */
 .popup{
   position:fixed;
   inset:0;
@@ -145,7 +162,6 @@ body{
   display:none;
   justify-content:center;
   align-items:center;
-  z-index:9999;
 }
 
 .popup-box{
@@ -153,11 +169,6 @@ body{
   padding:40px;
   border-radius:30px;
   text-align:center;
-  width:320px;
-}
-
-.popup-box h1{
-  color:#a855f7;
 }
 
 .popup-box button{
@@ -167,7 +178,6 @@ body{
   color:white;
   padding:12px 24px;
   border-radius:16px;
-  cursor:pointer;
 }
 
 </style>
@@ -175,7 +185,25 @@ body{
 
 <body>
 
-<div class="classroom">
+<!-- login -->
+<div class="login" id="loginBox">
+
+  <h1>💖 เข้าสู่ระบบ</h1>
+
+  <input
+    type="text"
+    id="studentId"
+    placeholder="กรอกรหัสนักเรียน"
+  >
+
+  <button id="loginBtn">
+    เข้าใช้งาน
+  </button>
+
+</div>
+
+<!-- classroom -->
+<div class="classroom" id="classroom">
 
   <div class="teacher">
     👩‍🏫 โต๊ะครู
@@ -208,9 +236,7 @@ body{
 
     <h1>จองสำเร็จ 💖</h1>
 
-    <p>
-      เจอกันเปิดเทอมนะ ✨
-    </p>
+    <p>เจอกันเปิดเทอมนะ ✨</p>
 
     <button id="closeBtn">
       โอเค
@@ -234,7 +260,6 @@ import {
 }
 from "https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js";
 
-/* Firebase */
 const firebaseConfig = {
   apiKey: "AIzaSyB67JLWjFM_CHIf0eLE-xK3bXYiCEhsNJQ",
   authDomain: "apsseatbooking.firebaseapp.com",
@@ -256,7 +281,43 @@ const popup = document.getElementById("popup");
 
 const closeBtn = document.getElementById("closeBtn");
 
-/* ปิด popup */
+const loginBtn = document.getElementById("loginBtn");
+
+const studentIdInput = document.getElementById("studentId");
+
+const loginBox = document.getElementById("loginBox");
+
+const classroom = document.getElementById("classroom");
+
+let currentStudentId = localStorage.getItem("studentId");
+
+/* login */
+loginBtn.addEventListener("click",()=>{
+
+  const id = studentIdInput.value.trim();
+
+  if(!id){
+
+    alert("กรอกรหัสนักเรียน");
+
+    return;
+  }
+
+  localStorage.setItem("studentId",id);
+
+  location.reload();
+
+});
+
+/* ถ้าล็อกอินแล้ว */
+if(currentStudentId){
+
+  loginBox.style.display = "none";
+
+  classroom.style.display = "block";
+
+}
+
 closeBtn.addEventListener("click",()=>{
 
   popup.style.display = "none";
@@ -280,7 +341,6 @@ const layout = [
 
 layout.forEach((item,index)=>{
 
-  /* ทางเดิน */
   if(item === "walk"){
 
     const div = document.createElement("div");
@@ -292,7 +352,6 @@ layout.forEach((item,index)=>{
     return;
   }
 
-  /* ช่องว่าง */
   if(item === "empty"){
 
     const div = document.createElement("div");
@@ -304,7 +363,6 @@ layout.forEach((item,index)=>{
     return;
   }
 
-  /* สร้างโต๊ะ */
   const seat = document.createElement("button");
 
   seat.className = "seat";
@@ -337,45 +395,31 @@ layout.forEach((item,index)=>{
 
   });
 
-  /* กดจอง / ยกเลิก */
+  /* click */
   seat.addEventListener("click", async ()=>{
-
-    /* สร้าง id ประจำเครื่อง */
-    let userId = localStorage.getItem("userId");
-
-    if(!userId){
-
-      userId = Math.random().toString(36).substring(2);
-
-      localStorage.setItem("userId",userId);
-
-    }
 
     const snapshot = await get(seatRef);
 
     const data = snapshot.val();
 
-    /* ถ้าที่นี้มีคนจองแล้ว */
+    /* ถ้ามีคนจอง */
     if(data){
 
-      /* ถ้าเป็นของตัวเอง */
-      if(data.userId === userId){
+      /* ยกเลิกได้เฉพาะของตัวเอง */
+      if(data.studentId === currentStudentId){
 
         const confirmDelete = confirm(
-          "ยกเลิกการจองของตัวเอง ?"
+          "ยกเลิกการจอง ?"
         );
 
         if(confirmDelete){
 
           await set(seatRef,null);
 
-          alert("ยกเลิกแล้ว 💔");
-
         }
 
       }else{
 
-        /* ของคนอื่น */
         alert("ที่นั่งนี้ถูกจองแล้ว 🔒");
 
       }
@@ -383,7 +427,7 @@ layout.forEach((item,index)=>{
       return;
     }
 
-    /* ตรวจว่าจองที่อื่นไว้หรือยัง */
+    /* เช็คว่าจองแล้วหรือยัง */
     const allSeats = await get(ref(db,"seats"));
 
     let alreadyBooked = false;
@@ -394,7 +438,7 @@ layout.forEach((item,index)=>{
 
       if(
         seatData &&
-        seatData.userId === userId
+        seatData.studentId === currentStudentId
       ){
 
         alreadyBooked = true;
@@ -403,35 +447,23 @@ layout.forEach((item,index)=>{
 
     });
 
-    /* ถ้าจองแล้ว */
     if(alreadyBooked){
 
-      alert("จองได้คนละ 1 ที่เท่านั้น 💖");
+      alert("จองได้คนละ 1 ที่ 💖");
 
       return;
     }
 
-    /* จองใหม่ */
-    const name = prompt("กรอกชื่อของตัวเอง 💕");
+    const name = prompt("กรอกชื่อ 💕");
 
     if(!name) return;
 
-    try{
+    await set(seatRef,{
+      name:name,
+      studentId:currentStudentId
+    });
 
-      await set(seatRef,{
-        name:name,
-        userId:userId
-      });
-
-      popup.style.display = "flex";
-
-    }catch(error){
-
-      alert("เกิดข้อผิดพลาด");
-
-      console.log(error);
-
-    }
+    popup.style.display = "flex";
 
   });
 
