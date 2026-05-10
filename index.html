@@ -53,7 +53,6 @@ body{
   padding:14px 18px;
   border-radius:18px;
   font-weight:bold;
-  box-shadow:0 5px 15px rgba(0,0,0,0.1);
 }
 
 /* ประตู */
@@ -111,7 +110,7 @@ body{
   transform:scale(1.08);
 }
 
-/* โต๊ะที่ถูกจอง = สีม่วง */
+/* โต๊ะที่จองแล้ว */
 .booked{
   background:#a855f7;
   color:white;
@@ -155,7 +154,6 @@ body{
   border-radius:30px;
   text-align:center;
   width:320px;
-  animation:pop 0.3s ease;
 }
 
 .popup-box h1{
@@ -170,19 +168,6 @@ body{
   padding:12px 24px;
   border-radius:16px;
   cursor:pointer;
-}
-
-@keyframes pop{
-
-  from{
-    transform:scale(0.7);
-    opacity:0;
-  }
-
-  to{
-    transform:scale(1);
-    opacity:1;
-  }
 }
 
 </style>
@@ -295,7 +280,6 @@ const layout = [
 
 layout.forEach((item,index)=>{
 
-  /* ทางเดิน */
   if(item === "walk"){
 
     const div = document.createElement("div");
@@ -307,7 +291,6 @@ layout.forEach((item,index)=>{
     return;
   }
 
-  /* ช่องว่าง */
   if(item === "empty"){
 
     const div = document.createElement("div");
@@ -333,13 +316,10 @@ layout.forEach((item,index)=>{
 
     const data = snapshot.val();
 
-    /* ถ้ามีคนจอง */
     if(data){
 
-      /* เปลี่ยนเป็นสีม่วง */
       seat.classList.add("booked");
 
-      /* แสดงชื่อคนจอง */
       seat.innerHTML = `
         👤<br>
         ${data.name}
@@ -347,7 +327,6 @@ layout.forEach((item,index)=>{
 
     }else{
 
-      /* กลับเป็นสีเขียว */
       seat.classList.remove("booked");
 
       seat.innerHTML = "ว่าง ✨";
@@ -363,20 +342,64 @@ layout.forEach((item,index)=>{
 
     const data = snapshot.val();
 
-    /* ถ้าจองแล้ว */
+    /* user id */
+    let userId = localStorage.getItem("userId");
+
+    if(!userId){
+
+      userId = Math.random().toString(36).substring(2);
+
+      localStorage.setItem("userId",userId);
+
+    }
+
+    /* ถ้ามีคนจองแล้ว */
     if(data){
 
-      const confirmDelete = confirm(
-        "ยกเลิกการจองของ " + data.name + " ?"
-      );
+      /* ยกเลิกได้เฉพาะของตัวเอง */
+      if(data.userId === userId){
 
-      if(confirmDelete){
+        const confirmDelete = confirm(
+          "ยกเลิกการจองของตัวเอง ?"
+        );
 
-        await set(seatRef,null);
+        if(confirmDelete){
 
-        alert("ยกเลิกการจองแล้ว 💔");
+          await set(seatRef,null);
+
+          alert("ยกเลิกแล้ว 💔");
+
+        }
+
+      }else{
+
+        alert("ที่นั่งนี้มีคนจองแล้ว 🔒");
 
       }
+
+      return;
+    }
+
+    /* เช็คว่าจองไปแล้วหรือยัง */
+    const allSeats = await get(ref(db,"seats"));
+
+    let alreadyBooked = false;
+
+    allSeats.forEach((child)=>{
+
+      const seatData = child.val();
+
+      if(seatData.userId === userId){
+
+        alreadyBooked = true;
+
+      }
+
+    });
+
+    if(alreadyBooked){
+
+      alert("จองได้คนละ 1 ที่เท่านั้น 💖");
 
       return;
     }
@@ -389,7 +412,8 @@ layout.forEach((item,index)=>{
     try{
 
       await set(seatRef,{
-        name:name
+        name:name,
+        userId:userId
       });
 
       popup.style.display = "flex";
