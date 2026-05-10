@@ -280,6 +280,7 @@ const layout = [
 
 layout.forEach((item,index)=>{
 
+  /* ทางเดิน */
   if(item === "walk"){
 
     const div = document.createElement("div");
@@ -291,6 +292,7 @@ layout.forEach((item,index)=>{
     return;
   }
 
+  /* ช่องว่าง */
   if(item === "empty"){
 
     const div = document.createElement("div");
@@ -338,11 +340,7 @@ layout.forEach((item,index)=>{
   /* กดจอง / ยกเลิก */
   seat.addEventListener("click", async ()=>{
 
-    const snapshot = await get(seatRef);
-
-    const data = snapshot.val();
-
-    /* user id */
+    /* สร้าง id ประจำเครื่อง */
     let userId = localStorage.getItem("userId");
 
     if(!userId){
@@ -353,10 +351,14 @@ layout.forEach((item,index)=>{
 
     }
 
-    /* ถ้ามีคนจองแล้ว */
+    const snapshot = await get(seatRef);
+
+    const data = snapshot.val();
+
+    /* ถ้าที่นี้มีคนจองแล้ว */
     if(data){
 
-      /* ยกเลิกได้เฉพาะของตัวเอง */
+      /* ถ้าเป็นของตัวเอง */
       if(data.userId === userId){
 
         const confirmDelete = confirm(
@@ -373,14 +375,15 @@ layout.forEach((item,index)=>{
 
       }else{
 
-        alert("ที่นั่งนี้มีคนจองแล้ว 🔒");
+        /* ของคนอื่น */
+        alert("ที่นั่งนี้ถูกจองแล้ว 🔒");
 
       }
 
       return;
     }
 
-    /* เช็คว่าจองไปแล้วหรือยัง */
+    /* ตรวจว่าจองที่อื่นไว้หรือยัง */
     const allSeats = await get(ref(db,"seats"));
 
     let alreadyBooked = false;
@@ -389,7 +392,10 @@ layout.forEach((item,index)=>{
 
       const seatData = child.val();
 
-      if(seatData.userId === userId){
+      if(
+        seatData &&
+        seatData.userId === userId
+      ){
 
         alreadyBooked = true;
 
@@ -397,6 +403,7 @@ layout.forEach((item,index)=>{
 
     });
 
+    /* ถ้าจองแล้ว */
     if(alreadyBooked){
 
       alert("จองได้คนละ 1 ที่เท่านั้น 💖");
@@ -405,7 +412,7 @@ layout.forEach((item,index)=>{
     }
 
     /* จองใหม่ */
-    const name = prompt("กรอกชื่อ 💕");
+    const name = prompt("กรอกชื่อของตัวเอง 💕");
 
     if(!name) return;
 
