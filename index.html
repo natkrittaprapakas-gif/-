@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>จองที่นั่งห้องเรียน 💖</title>
+
+<style>
+
+body{
+  margin:0;
+  background:#ffeef5;
+  font-family:sans-serif;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+  color:#444;
+}
+
+.classroom{
+  width:1000px;
+  background:#fff7fb;
+  border-radius:35px;
+  padding:30px;
+  position:relative;
+  box-shadow:0 10px 40px rgba(255,182,193,0.4);
+  border:5px solid #ffd6e7;
+}
+
+/* กระดาน */
+.board{
+  width:420px;
+  margin:auto;
+  background:#ffffff;
+  color:#ff5c8a;
+  text-align:center;
+  padding:18px;
+  border-radius:25px;
+  font-size:28px;
+  font-weight:bold;
+  border:4px solid #ffc2d6;
+}
+
+/* โต๊ะครู */
+.teacher{
+  position:absolute;
+  top:30px;
+  left:30px;
+  background:#ffd166;
+  color:#6b4f00;
+  padding:14px 18px;
+  border-radius:18px;
+  font-weight:bold;
+  box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+
+/* ประตู */
+.door{
+  position:absolute;
+  right:20px;
+  background:#bde0fe;
+  color:#2563eb;
+  padding:12px 16px;
+  border-radius:18px;
+  font-weight:bold;
+}
+
+.top-door{
+  top:80px;
+}
+
+.bottom-door{
+  bottom:70px;
+}
+
+/* ที่นั่ง */
+.seats{
+  margin-top:70px;
+
+  display:grid;
+
+  grid-template-columns:
+    90px 90px
+    60px
+    90px 90px 90px;
+
+  row-gap:28px;
+  column-gap:18px;
+
+  justify-content:center;
+}
+
+/* โต๊ะว่าง */
+.seat{
+  width:90px;
+  height:90px;
+  border:none;
+  border-radius:25px;
+  background:#86efac;
+  color:#14532d;
+  font-size:14px;
+  font-weight:bold;
+  cursor:pointer;
+  transition:0.2s;
+  box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+
+.seat:hover{
+  transform:scale(1.08);
+}
+
+/* โต๊ะที่ถูกจอง = สีม่วง */
+.booked{
+  background:#a855f7;
+  color:white;
+  border:4px solid #7e22ce;
+}
+
+/* ทางเดิน */
+.walkway{
+  width:60px;
+  height:90px;
+}
+
+/* ช่องว่าง */
+.empty{
+  width:90px;
+  height:90px;
+}
+
+.back{
+  margin-top:40px;
+  text-align:center;
+  font-size:28px;
+  font-weight:bold;
+  color:#ff5c8a;
+}
+
+/* popup */
+.popup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.5);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:9999;
+}
+
+.popup-box{
+  background:white;
+  padding:40px;
+  border-radius:30px;
+  text-align:center;
+  width:320px;
+  animation:pop 0.3s ease;
+}
+
+.popup-box h1{
+  color:#a855f7;
+}
+
+.popup-box button{
+  margin-top:20px;
+  border:none;
+  background:#a855f7;
+  color:white;
+  padding:12px 24px;
+  border-radius:16px;
+  cursor:pointer;
+}
+
+@keyframes pop{
+
+  from{
+    transform:scale(0.7);
+    opacity:0;
+  }
+
+  to{
+    transform:scale(1);
+    opacity:1;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="classroom">
+
+  <div class="teacher">
+    👩‍🏫 โต๊ะครู
+  </div>
+
+  <div class="board">
+    🌸 กระดาน / โปรเจคเตอร์ 🌸
+  </div>
+
+  <div class="door top-door">
+    🚪 เข้า
+  </div>
+
+  <div class="door bottom-door">
+    🚪 ออก
+  </div>
+
+  <div class="seats" id="seats"></div>
+
+  <div class="back">
+    🎀 หลังห้อง 🎀
+  </div>
+
+</div>
+
+<!-- popup -->
+<div class="popup" id="popup">
+
+  <div class="popup-box">
+
+    <h1>จองสำเร็จ 💖</h1>
+
+    <p>
+      เจอกันเปิดเทอมนะ ✨
+    </p>
+
+    <button id="closeBtn">
+      โอเค
+    </button>
+
+  </div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+
+import {
+  getDatabase,
+  ref,
+  set,
+  onValue,
+  get
+}
+from "https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js";
+
+/* Firebase */
+const firebaseConfig = {
+  apiKey: "AIzaSyB67JLWjFM_CHIf0eLE-xK3bXYiCEhsNJQ",
+  authDomain: "apsseatbooking.firebaseapp.com",
+  databaseURL: "https://apsseatbooking-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "apsseatbooking",
+  storageBucket: "apsseatbooking.firebasestorage.app",
+  messagingSenderId: "933618674396",
+  appId: "1:933618674396:web:d3e77f8bbc5b792daa2219",
+  measurementId: "G-ZCVF6ZYR8X"
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getDatabase(app);
+
+const seatsContainer = document.getElementById("seats");
+
+const popup = document.getElementById("popup");
+
+const closeBtn = document.getElementById("closeBtn");
+
+/* ปิด popup */
+closeBtn.addEventListener("click",()=>{
+
+  popup.style.display = "none";
+
+});
+
+/* ผังห้อง */
+const layout = [
+
+  "seat","seat","walk","seat","seat","seat",
+
+  "seat","seat","walk","seat","seat","seat",
+
+  "empty","seat","walk","seat","seat","seat",
+
+  "seat","seat","walk","seat","seat","seat",
+
+  "seat","seat","walk","seat","seat","empty"
+
+];
+
+layout.forEach((item,index)=>{
+
+  /* ทางเดิน */
+  if(item === "walk"){
+
+    const div = document.createElement("div");
+
+    div.className = "walkway";
+
+    seatsContainer.appendChild(div);
+
+    return;
+  }
+
+  /* ช่องว่าง */
+  if(item === "empty"){
+
+    const div = document.createElement("div");
+
+    div.className = "empty";
+
+    seatsContainer.appendChild(div);
+
+    return;
+  }
+
+  /* สร้างโต๊ะ */
+  const seat = document.createElement("button");
+
+  seat.className = "seat";
+
+  seat.innerHTML = "ว่าง ✨";
+
+  const seatRef = ref(db,"seats/" + index);
+
+  /* realtime */
+  onValue(seatRef,(snapshot)=>{
+
+    const data = snapshot.val();
+
+    /* ถ้ามีคนจอง */
+    if(data){
+
+      /* เปลี่ยนเป็นสีม่วง */
+      seat.classList.add("booked");
+
+      /* แสดงชื่อคนจอง */
+      seat.innerHTML = `
+        👤<br>
+        ${data.name}
+      `;
+
+    }else{
+
+      /* กลับเป็นสีเขียว */
+      seat.classList.remove("booked");
+
+      seat.innerHTML = "ว่าง ✨";
+
+    }
+
+  });
+
+  /* กดจอง / ยกเลิก */
+  seat.addEventListener("click", async ()=>{
+
+    const snapshot = await get(seatRef);
+
+    const data = snapshot.val();
+
+    /* ถ้าจองแล้ว */
+    if(data){
+
+      const confirmDelete = confirm(
+        "ยกเลิกการจองของ " + data.name + " ?"
+      );
+
+      if(confirmDelete){
+
+        await set(seatRef,null);
+
+        alert("ยกเลิกการจองแล้ว 💔");
+
+      }
+
+      return;
+    }
+
+    /* จองใหม่ */
+    const name = prompt("กรอกชื่อ 💕");
+
+    if(!name) return;
+
+    try{
+
+      await set(seatRef,{
+        name:name
+      });
+
+      popup.style.display = "flex";
+
+    }catch(error){
+
+      alert("เกิดข้อผิดพลาด");
+
+      console.log(error);
+
+    }
+
+  });
+
+  seatsContainer.appendChild(seat);
+
+});
+
+</script>
+
+</body>
+</html>
